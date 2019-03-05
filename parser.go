@@ -2,25 +2,9 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
 )
 
-type LogLine struct {
-	IP          string
-	User        string
-	Time        time.Time
-	Method      string
-	Path        string
-	HTTPVersion string
-	// Request string
-	Status    int64
-	BodyBytes int64
-	Referer   string
-	UserAgent string
-}
-
+// Parser handles collecting items and parsing them into their final values
 type Parser struct {
 	s   *Scanner
 	buf struct {
@@ -28,74 +12,50 @@ type Parser struct {
 		raw  string
 		n    int
 	}
-	itemOrder []itemProducer
+	itemOrder []*ItemParser
 }
 
-// $ip - $user [$time $tz] "$req" $status $bytes "$ref" "$ua"
-var itemOrder = []itemProducer{
-	ipProducer,           // X 0: $ip
-	wordProducer,         // X 1: -
-	wordProducer,         // X 2: $user
-	leftDelimProducer,    // X 3: [
-	wordProducer,         // X 4: $time
-	wordProducer,         // X 5: $tz
-	rightDelimProducer,   // X 6: ]
-	quotedStringProducer, // 7: "$req"
-	intProducer,          // X 8: $status
-	intProducer,          // X 9: $bytes
-	quotedStringProducer, // X 10: "$ref"
-	quotedStringProducer, // X 11: "$ua"
-}
+// NewParser returns a prepared *Parser with an attached *Scanner
+func NewParser(itemOrder []*ItemParser) *Parser {
+	var producerOrder = []itemProducer{}
 
-func NewParser(input string) *Parser {
-	p := &Parser{
-		itemOrder: itemOrder,
+	for _, order := range itemOrder {
+		producerOrder = append(producerOrder, order.producers...)
 	}
 
-	p.s = scan(input, p.itemOrder)
-	return p
+	return &Parser{
+		itemOrder: itemOrder,
+		s:         NewScanner(producerOrder),
+	}
 }
 
+// ParseLine takes a raw string line as input and returns a *LogLine, or error
 // TODO: MAKE THIS CONFIGURABLE
-func (p *Parser) ParseLine() (*LogLine, error) {
-	var items []item
-	for _, producer := range p.itemOrder {
-		item, raw := p.scanIgnoreSpaces()
+func (p *Parser) ParseLine(input string) (*LogLine, error) {
+	var ll = &LogLine{}
+	defer p.reset()
 
-		if item.typ != producer.typ {
-			// log.Fatalf("GOT UNEXPECTED VALUE: %v (%s)\nEXPECTED: %v", item.typ, raw, producer.typ)
-			fmt.Printf("GOT UNEXPECTED VALUE: %v (%s)\nEXPECTED: %v\n", item.typ, raw, producer.typ)
-			return nil, nil
+	go p.s.run(input)
+
+	for _, ip := range p.itemOrder {
+		var items []item
+
+		// gather all our items, make sure we get the right types
+		for _, producer := range ip.producers {
+			it, raw := p.scanIgnoreSpaces()
+			if it.typ != producer.typ {
+				fmt.Printf("GOT UNEXPECTED VALUE: %v (%s)\nEXPECTED: %v\n", it.typ, raw, producer.typ)
+			}
+			items = append(items, it)
 		}
 
-		// fmt.Printf("GOT '%s'\n", raw)
-		items = append(items, item)
-	}
+		// get the value for these items
+		val, err := ip.parse(items...)
+		if err != nil {
+			fmt.Printf("ERR: %v\n", err)
+		}
 
-	fullTime := items[4].val + " " + items[5].val
-	parsedTime, err := time.Parse("02/Jan/2006:15:04:05 -0700", fullTime)
-	if err != nil {
-		return nil, err
-	}
-
-	status, err := strconv.ParseInt(items[8].val, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	bytes, err := strconv.ParseInt(items[9].val, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	ll := &LogLine{
-		IP:        items[0].val,
-		User:      items[2].val,
-		Time:      parsedTime,
-		Status:    status,
-		BodyBytes: bytes,
-		Referer:   strings.Trim(items[10].val, "\""),
-		UserAgent: strings.Trim(items[11].val, "\""),
+		ll.add(val)
 	}
 
 	return ll, nil
@@ -107,20 +67,30 @@ func (p *Parser) scan() (item, string) {
 		return p.buf.item, p.buf.raw
 	}
 
-	item := p.s.nextItem()
+	it := p.s.nextItem()
 
-	p.buf.item, p.buf.raw = item, item.val
+	p.buf.item, p.buf.raw = it, it.val
 	return p.buf.item, p.buf.raw
 }
 
 func (p *Parser) scanIgnoreSpaces() (item, string) {
-	item, raw := p.scan()
-	for item.typ == itemSpace {
-		item, raw = p.scan()
+	it, raw := p.scan()
+	if it.typ == itemSpace {
+		it, raw = p.scan()
 	}
-	return item, raw
+	return it, raw
 }
 
+// UNUSED
+/*
 func (p *Parser) unscan() {
 	p.buf.n = 1
+}
+*/
+
+func (p *Parser) reset() {
+	p.buf.item = item{}
+	p.buf.raw = ""
+	p.buf.n = 0
+	p.s.reset()
 }
