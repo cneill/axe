@@ -186,18 +186,14 @@ func (s *Scanner) acceptSequence(valid string) bool {
 	}
 	return false
 }
-*/
 
 // drain runs through output so lexing goroutine exists; called by parser
-/*
 func (s *Scanner) drain() {
 	for range s.items {
 	}
 }
-*/
 
 // ignore skips over the pending input before this point. - UNUSED FOR NOW
-/*
 func (s *Scanner) ignore() {
 	s.start = s.pos
 }
@@ -347,5 +343,7 @@ var quotedStringProducer = itemProducer{scanQuotedString, itemQuotedString}
 var wordProducer = itemProducer{scanWord, itemWord}
 
 // UNUSED
-// var spaceProducer = itemProducer{scanSpace, itemSpace}
-// var numberProducer = itemProducer{scanNumber, itemNumber}
+/*
+var spaceProducer = itemProducer{scanSpace, itemSpace}
+var numberProducer = itemProducer{scanNumber, itemNumber}
+*/

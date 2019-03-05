@@ -38,14 +38,6 @@ func nilVal(items []item) value {
 	}
 }
 
-/*
-var nilVal = value{
-	items:     nil,
-	obj:       nil,
-	valueType: ValueNil,
-}
-*/
-
 type ipFn func(...item) (value, error)
 
 var errItemCount = fmt.Errorf("invalid number of items")

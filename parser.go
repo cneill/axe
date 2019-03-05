@@ -78,16 +78,16 @@ func (p *Parser) scanIgnoreSpaces() (item, string) {
 	return it, raw
 }
 
-// UNUSED
-/*
-func (p *Parser) unscan() {
-	p.buf.n = 1
-}
-*/
-
 func (p *Parser) reset() {
 	p.buf.item = item{}
 	p.buf.raw = ""
 	p.buf.n = 0
 	p.s.reset()
 }
+
+// UNUSED
+/*
+func (p *Parser) unscan() {
+	p.buf.n = 1
+}
+*/
