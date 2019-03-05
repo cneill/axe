@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"sync"
 )
@@ -9,6 +10,7 @@ import (
 // TODO: don't bother parsing bits that aren't relevant - if printing IPs, just parse them and leave the rest nil
 
 var axeWG = &sync.WaitGroup{}
+var numLinesMutex = &sync.RWMutex{}
 
 // Axe controls parsing of STDIN
 type Axe struct {
@@ -17,9 +19,10 @@ type Axe struct {
 	printFunc  func(*LogLine)
 	errFunc    func(error)
 
-	inChan  chan string
-	outChan chan *LogLine
-	errChan chan error
+	inChan   chan string
+	outChan  chan *LogLine
+	errChan  chan error
+	numLines int
 }
 
 type llFunc func(*LogLine)
@@ -67,10 +70,15 @@ func (a *Axe) readWorker(done func()) {
 
 	for s.Scan() {
 		text := s.Text()
-		// fmt.Printf("%s\n", text)
 		a.inChan <- text
 	}
 	close(a.inChan)
+}
+
+func (a *Axe) incrNumLines() {
+	numLinesMutex.Lock()
+	a.numLines++
+	numLinesMutex.Unlock()
 }
 
 // inWorker parses strings from readWorker into LogLines
@@ -78,10 +86,10 @@ func (a *Axe) inWorker(done func()) {
 	defer done()
 	parser := NewParser(nginxItemOrder)
 	for input := range a.inChan {
-		// fmt.Printf("GOT LINE: %s\n", input)
+		a.incrNumLines()
 		ll, err := parser.ParseLine(input)
 		if err != nil {
-			a.errChan <- err
+			a.errChan <- fmt.Errorf("%d:%v", a.numLines, err)
 		} else {
 			a.outChan <- ll
 		}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"net"
 	"net/http"
 	"net/url"
@@ -16,11 +17,34 @@ type value struct {
 	valueType string
 }
 
+func (v value) pos() int {
+	if len(v.items) == 0 {
+		return 0
+	}
+	pos := math.MaxInt32
+	for _, i := range v.items {
+		if i.pos < pos {
+			pos = i.pos
+		}
+	}
+	return pos
+}
+
+func nilVal(items []item) value {
+	return value{
+		items:     items,
+		obj:       nil,
+		valueType: ValueNil,
+	}
+}
+
+/*
 var nilVal = value{
 	items:     nil,
 	obj:       nil,
 	valueType: ValueNil,
 }
+*/
 
 type ipFn func(...item) (value, error)
 
@@ -35,16 +59,22 @@ type ItemParser struct {
 
 func (i *ItemParser) parse(input ...item) (value, error) {
 	if len(input) != len(i.producers) {
-		return nilVal, errItemCount
+		return nilVal(input), errItemCount
 	}
 
 	if i.parseFn == nil {
-		return nilVal, nil
+		return nilVal(input), nil
+	}
+
+	for _, in := range input {
+		if in.typ == itemError {
+			return nilVal(input), fmt.Errorf("invalid value:%d: %s", in.pos, in.val)
+		}
 	}
 
 	v, err := i.parseFn(input...)
 	if err != nil {
-		err = fmt.Errorf("%s: %v", i.valueType, err)
+		err = fmt.Errorf("%d:%s: %v", v.pos(), i.valueType, err)
 	}
 	return v, err
 }
@@ -60,7 +90,7 @@ func parseTime(input ...item) (value, error) {
 	fullTime := input[1].val + " " + input[2].val
 	parsedTime, err := time.Parse(nginxTimeFormat, fullTime)
 	if err != nil {
-		return nilVal, err
+		return nilVal(input), err
 	}
 	return value{input, parsedTime, ValueTime}, nil
 }
@@ -99,17 +129,17 @@ func parseRequest(input ...item) (value, error) {
 	str := removeQuotes(input[0].val)
 	parts := strings.Split(str, " ")
 	if len(parts) != 3 {
-		return nilVal, fmt.Errorf("invalid number of request parts")
+		return nilVal(input), fmt.Errorf("invalid number of request parts")
 	}
 
 	req, err := http.NewRequest(parts[0], parts[1], nil)
 	if err != nil {
-		return nilVal, err
+		return nilVal(input), err
 	}
 
 	maj, min, ok := http.ParseHTTPVersion(parts[2])
 	if !ok {
-		return nilVal, fmt.Errorf("invalid HTTP version")
+		return nilVal(input), fmt.Errorf("invalid HTTP version")
 	}
 	req.ProtoMajor, req.ProtoMinor = maj, min
 
@@ -126,7 +156,7 @@ var ParserStatus = &ItemParser{
 func parseStatus(input ...item) (value, error) {
 	status, err := strconv.ParseInt(input[0].val, 10, 64)
 	if err != nil {
-		return nilVal, err
+		return nilVal(input), err
 	}
 	return value{input, status, ValueStatus}, nil
 }
@@ -141,7 +171,7 @@ var ParserBodyBytes = &ItemParser{
 func parseBodyBytes(input ...item) (value, error) {
 	status, err := strconv.ParseInt(input[0].val, 10, 64)
 	if err != nil {
-		return nilVal, err
+		return nilVal(input), err
 	}
 	return value{input, status, ValueBodyBytes}, nil
 }
@@ -156,11 +186,11 @@ var ParserReferer = &ItemParser{
 func parseReferer(input ...item) (value, error) {
 	str := removeQuotes(input[0].val)
 	if str == "-" {
-		return nilVal, nil
+		return nilVal(input), nil
 	}
 	parsed, err := url.Parse(str)
 	if err != nil {
-		return nilVal, err
+		return nilVal(input), err
 	}
 
 	return value{input, parsed, ValueReferer}, nil

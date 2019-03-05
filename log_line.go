@@ -44,7 +44,7 @@ func (l *LogLine) String() string {
 		referer = l.Referer.String()
 	}
 	return fmt.Sprintf(
-		"%s - %s [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n",
+		"%s - %s [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"",
 		ip,
 		l.User,
 		l.Time.Format(nginxTimeFormat),
@@ -111,7 +111,6 @@ func (l *LogLine) add(input value) *LogLine {
 	case ValueIgnore:
 	case ValueNil:
 	default:
-		fmt.Printf("INVALID ITEM: %v", input)
 		l.Error = fmt.Errorf("invalid item: %v", input)
 	}
 	return l

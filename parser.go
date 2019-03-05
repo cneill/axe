@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 // Parser handles collecting items and parsing them into their final values
 type Parser struct {
 	s   *Scanner
@@ -42,23 +38,24 @@ func (p *Parser) ParseLine(input string) (*LogLine, error) {
 
 		// gather all our items, make sure we get the right types
 		for _, producer := range ip.producers {
-			it, raw := p.scanIgnoreSpaces()
-			if it.typ != producer.typ {
-				fmt.Printf("GOT UNEXPECTED VALUE: %v (%s)\nEXPECTED: %v\n", it.typ, raw, producer.typ)
+			it, _ := p.scanIgnoreSpaces()
+			if it.typ == producer.typ {
+				items = append(items, it)
+			} else {
+				items = append(items, item{itemError, it.pos, it.val})
 			}
-			items = append(items, it)
 		}
 
 		// get the value for these items
 		val, err := ip.parse(items...)
 		if err != nil {
-			fmt.Printf("ERR: %v\n", err)
+			ll.Error = err
 		}
 
 		ll.add(val)
 	}
 
-	return ll, nil
+	return ll, ll.Error
 }
 
 func (p *Parser) scan() (item, string) {

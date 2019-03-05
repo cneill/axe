@@ -148,6 +148,17 @@ func (s *Scanner) acceptRun(valid string) {
 	s.backup()
 }
 
+// acceptUntil consumes to 'end' or eof; returns true if it accepts, false otherwise
+func (s *Scanner) acceptUntil(end rune) bool {
+	if s.peek() == end || s.peek() == eof {
+		return false
+	}
+	for r := s.next(); r != end && r != eof; r = s.next() {
+	}
+	s.backup()
+	return true
+}
+
 // acceptUntilRuneFn consumes until 'end' returns true
 func (s *Scanner) acceptUntilRuneFn(end runeFn) bool {
 	accepted := false
@@ -174,19 +185,6 @@ func (s *Scanner) acceptSequence(valid string) bool {
 		return true
 	}
 	return false
-}
-*/
-
-// acceptUntil consumes to 'end' or eof; returns true if it accepts, false otherwise
-/*
-func (s *Scanner) acceptUntil(end rune) bool {
-	if s.peek() == end || s.peek() == eof {
-		return false
-	}
-	for r := s.next(); r != end && r != eof; r = s.next() {
-	}
-	s.backup()
-	return true
 }
 */
 
@@ -276,18 +274,34 @@ func scanRightDelimiter(s *Scanner) stateFn {
 	return nil
 }
 
+// TODO: make this more restrictive or configurable?
 func scanQuotedString(s *Scanner) stateFn {
 	r := s.next()
 	if !isQuote(r) {
 		s.emit(itemError)
 		return nil
 	}
-	s.acceptUntilRuneFn(isQuote)
-	r = s.next()
-	if !isQuote(r) {
-		s.emit(itemError)
-		return nil
+
+	if r == '"' {
+		s.acceptUntil('"')
+		if !s.accept("\"") {
+			s.emit(itemError)
+			return nil
+		}
+	} else if r == '\'' {
+		s.acceptUntil('\'')
+		if !s.accept("'") {
+			s.emit(itemError)
+			return nil
+		}
+	} else if r == '`' {
+		s.acceptUntil('`')
+		if !s.accept("`") {
+			s.emit(itemError)
+			return nil
+		}
 	}
+
 	s.emit(itemQuotedString)
 	return nil
 }

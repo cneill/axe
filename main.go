@@ -32,11 +32,11 @@ func init() {
 }
 
 func defaultPrintFunc(l *LogLine) {
-	fmt.Printf("%s", l)
+	fmt.Println(l.String())
 }
 
 func defaultErrFunc(err error) {
-	_, printErr := fmt.Fprintf(os.Stderr, "[ERROR] %v\n", err)
+	_, printErr := fmt.Fprintf(os.Stderr, "%v\n", err)
 	if printErr != nil {
 		log.Fatalf("SUPER SERIOUS: %v: %v", printErr, err)
 	}
