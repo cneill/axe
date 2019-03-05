@@ -10,7 +10,7 @@ axe takes nginx log files and filters the information down to only the fields yo
 
 `Usage: axe [command]`
 
-### Examples:
+### Examples
 
 __Parse file:__
 
@@ -26,7 +26,7 @@ zcat -f access* | axe ips
 
 __BUG:__ For some reason, `axe ips <(cat access*)` is broken.
 
-__Commands:__
+## Commands
 - `ips`: IP addresses of requesting clients
 - `paths`: Usernames supplied with requests
 - `referers`: Referring URLs
