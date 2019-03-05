@@ -4,6 +4,12 @@ axe takes nginx log files and filters the information down to only the fields yo
 
 ## Installing
 
+__go >=1.11:__
+
+`go get github.com/cneill/axe`
+
+__go <1.11:__
+
 `go install github.com/cneill/axe`
 
 ## Filtering
