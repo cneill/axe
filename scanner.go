@@ -225,23 +225,6 @@ func scanInt(s *Scanner) stateFn {
 	return nil
 }
 
-/*
-func scanNumber(s *Scanner) stateFn {
-	if s.accept("-") {
-		// we have either a "-" or numeric characters
-		if !unicode.IsNumber(s.peek()) {
-			s.emit(itemError)
-			return nil
-		}
-	}
-	s.acceptRun(digits)
-	s.accept(".")
-	s.acceptRun(digits)
-	s.emit(itemNumber)
-	return nil
-}
-*/
-
 func scanIP(s *Scanner) stateFn {
 	s.acceptRun(digits)
 	s.accept(".")
@@ -305,6 +288,24 @@ func scanQuotedString(s *Scanner) stateFn {
 	s.emit(itemQuotedString)
 	return nil
 }
+
+// UNUSED
+/*
+func scanNumber(s *Scanner) stateFn {
+	if s.accept("-") {
+		// we have either a "-" or numeric characters
+		if !unicode.IsNumber(s.peek()) {
+			s.emit(itemError)
+			return nil
+		}
+	}
+	s.acceptRun(digits)
+	s.accept(".")
+	s.acceptRun(digits)
+	s.emit(itemNumber)
+	return nil
+}
+*/
 
 // isSpace returns true if r is space or tab
 func isSpace(r rune) bool {
