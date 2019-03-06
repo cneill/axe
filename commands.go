@@ -104,8 +104,10 @@ func (c *command) execute(args []string) (llFunc, error) {
 		return nil, err
 	}
 
-	if err := c.ef(args); err != nil {
-		return nil, fmt.Errorf("%s: %v", c.name, err)
+	if c.ef != nil {
+		if err := c.ef(args); err != nil {
+			return nil, fmt.Errorf("%s: %v", c.name, err)
+		}
 	}
 
 	return c.pf, nil
