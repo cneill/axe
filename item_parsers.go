@@ -71,7 +71,7 @@ func (i *ItemParser) parse(input ...item) (value, error) {
 
 	for _, in := range input {
 		if in.typ == itemError {
-			return nilVal(input), fmt.Errorf("invalid value:%d: %s", in.pos, in.val)
+			return nilVal(input), fmt.Errorf("%d:invalid value: %s", in.pos, in.val)
 		}
 	}
 
