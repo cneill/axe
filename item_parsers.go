@@ -30,6 +30,17 @@ func (v value) pos() int {
 	return pos
 }
 
+func (v value) String() string {
+	var result = ""
+	for i, it := range v.items {
+		result += it.val
+		if i != len(v.items)-1 {
+			result += " "
+		}
+	}
+	return result
+}
+
 func nilVal(items []item) value {
 	return value{
 		items:     items,
@@ -66,7 +77,7 @@ func (i *ItemParser) parse(input ...item) (value, error) {
 
 	v, err := i.parseFn(input...)
 	if err != nil {
-		err = fmt.Errorf("%d:%s: %v", v.pos(), i.valueType, err)
+		err = fmt.Errorf("%d:%s: %v (%s)", v.pos(), i.valueType, err, v.String())
 	}
 	return v, err
 }
