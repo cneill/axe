@@ -48,5 +48,3 @@ __Concatenate all log files, gzipped or not, and parse:__
 ```bash
 zcat -f access* | axe ips
 ```
-
-__BUG:__ For some reason, `axe ips <(cat access*)` is broken.
