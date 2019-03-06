@@ -26,11 +26,9 @@ type LogLine struct {
 // TODO: make this customizable
 // $ip - $user [$time $tz] "$req" $status $bytes "$ref" "$ua"
 func (l *LogLine) String() string {
-	var ip = "-"
-	var method = ""
-	var path = ""
+	var method, path string
+	var ip, referer = "-", "-"
 	var ver = "HTTP/1.1"
-	var referer = "-"
 	if l.IP != nil {
 		ip = l.IP.String()
 	}
@@ -45,16 +43,8 @@ func (l *LogLine) String() string {
 	}
 	return fmt.Sprintf(
 		"%s - %s [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"",
-		ip,
-		l.User,
-		l.Time.Format(nginxTimeFormat),
-		method,
-		path,
-		ver,
-		l.Status,
-		l.BodyBytes,
-		referer,
-		l.UserAgent,
+		ip, l.User, l.Time.Format(nginxTimeFormat), method,
+		path, ver, l.Status, l.BodyBytes, referer, l.UserAgent,
 	)
 }
 
