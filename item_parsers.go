@@ -145,6 +145,7 @@ func parseRequest(input ...item) (value, error) {
 		return nilVal(input), fmt.Errorf("invalid HTTP version")
 	}
 	req.ProtoMajor, req.ProtoMinor = maj, min
+	req.Proto = fmt.Sprintf("HTTP/%d.%d", req.ProtoMajor, req.ProtoMinor)
 
 	return value{input, req, ValueRequest}, nil
 }

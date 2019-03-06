@@ -12,6 +12,9 @@ import (
 var axeWG = &sync.WaitGroup{}
 var numLinesMutex = &sync.RWMutex{}
 
+type llFunc func(*LogLine)
+type errFunc func(error)
+
 // Axe controls parsing of STDIN
 type Axe struct {
 	numWorkers int
@@ -24,9 +27,6 @@ type Axe struct {
 	errChan  chan error
 	numLines int
 }
-
-type llFunc func(*LogLine)
-type errFunc func(error)
 
 // NewAxe returns a prepared *Axe
 func NewAxe(numWorkers int, pf llFunc, ef errFunc) *Axe {

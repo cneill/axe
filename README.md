@@ -12,9 +12,28 @@ __go <1.11:__
 
 `go install github.com/cneill/axe`
 
-## Filtering
+## Usage
 
-`Usage: axe [command]`
+```
+axe takes logfiles as STDIN and prints the information requested
+Usage: axe [command] [options]
+
+Commands and options:
+help
+ips
+  -resolve
+        resolve IPs to hostnames where possible
+paths
+requests
+referers
+statuses
+times
+  -format string
+        specify the format for time output (default "02/Jan/2006:15:04:05 -0700")
+user-agents
+  -simplify
+        simplify user-agents
+```
 
 ### Examples
 
@@ -31,11 +50,3 @@ zcat -f access* | axe ips
 ```
 
 __BUG:__ For some reason, `axe ips <(cat access*)` is broken.
-
-## Commands
-- `ips`: IP addresses of requesting clients
-- `paths`: Usernames supplied with requests
-- `referers`: Referring URLs
-- `requests`: Full requests (method + path + HTTP version)
-- `times`: Date/time stamps
-- `useragents`: User-Agents supplied by clients

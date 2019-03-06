@@ -38,7 +38,7 @@ func (l *LogLine) String() string {
 		req := l.Request
 		method = req.Method
 		path = req.URL.String()
-		ver = fmt.Sprintf("HTTP/%d.%d", req.ProtoMajor, req.ProtoMinor)
+		ver = req.Proto
 	}
 	if l.Referer != nil {
 		referer = l.Referer.String()
